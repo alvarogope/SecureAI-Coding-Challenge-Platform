@@ -11,18 +11,18 @@ A full-stack AI-powered coding challenge platform. Users log in, select a diffic
  
 ---
  
-## ✨ Features
+## Features
  
-- 🤖 **AI-Generated Challenges** — GPT produces unique coding questions on every request, eliminating the need for a static challenge database
-- 🔐 **Clerk Authentication** — Full sign-in/sign-up flow with session management split across frontend and backend
-- 📊 **Challenge History** — Each user's past attempts, answers, and results are stored and displayed in a History panel
-- ⚡ **Daily Quota System** — Tracks and limits the number of challenges per user per day (resets every 24 hours)
-- 🛡️ **Route Protection** — Authentication enforced at a granular level on the frontend; protected API endpoints on the backend
-- 🔒 **Secure by Design** — API keys stored in `.env` files excluded from version control; CORS middleware restricts requests to the frontend domain only
+- **AI-Generated Challenges** — GPT produces unique coding questions on every request, eliminating the need for a static challenge database
+- **Clerk Authentication** — Full sign-in/sign-up flow with session management split across frontend and backend
+- **Challenge History** — Each user's past attempts, answers, and results are stored and displayed in a History panel
+- **Daily Quota System** — Tracks and limits the number of challenges per user per day (resets every 24 hours)
+- **Route Protection** — Authentication enforced at a granular level on the frontend; protected API endpoints on the backend
+- **Secure by Design** — API keys stored in `.env` files excluded from version control; CORS middleware restricts requests to the frontend domain only
 
 ---
 
-## 📸 Preview
+## Preview
 
 ### Sign In
 ![Sign In](assets/sign-in.png)
@@ -35,7 +35,7 @@ A full-stack AI-powered coding challenge platform. Users log in, select a diffic
 
 ---
 
-## 🏗️ Architecture
+## Architecture
  
 ```
 ┌─────────────────────┐         ┌──────────────────────┐
@@ -52,7 +52,7 @@ A full-stack AI-powered coding challenge platform. Users log in, select a diffic
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
  
 ```
 AI-Coding-Challenge-Platform/
@@ -91,7 +91,7 @@ AI-Coding-Challenge-Platform/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
  
 ### Prerequisites
  
@@ -146,7 +146,7 @@ App available at `http://localhost:5173`
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
  
 | Method | Endpoint | Description |
 |---|---|---|
@@ -159,7 +159,7 @@ App available at `http://localhost:5173`
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
  
 | Layer | Technology |
 |---|---|
