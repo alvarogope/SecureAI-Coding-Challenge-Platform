@@ -7,7 +7,8 @@ from ..database.db import (
     get_challenge_quota,
     create_challenge,
     reset_quota_if_needed,
-    get_user_challenges, create_challenge_quota
+    get_user_challenges, create_challenge_quota,
+    try_consume_quota, refund_quota
 )
 from ..utils import authenticate_and_get_user_details
 from ..database.models import get_db
@@ -23,7 +24,7 @@ class ChallengeRequest(BaseModel):
         json_schema_extra = {"example": {"difficulty": "easy"}}
 
 @router.post("/generate-challenge")
-async def generate_challenge(request: ChallengeRequest, request_obj: Request, db: Session = Depends(get_db)):
+def generate_challenge(request: ChallengeRequest, request_obj: Request, db: Session = Depends(get_db)):
     user_details = authenticate_and_get_user_details(request_obj)
     user_id = user_details.get('userid')
 
@@ -31,25 +32,29 @@ async def generate_challenge(request: ChallengeRequest, request_obj: Request, db
     if not quota:
         quota = create_challenge_quota(db, user_id)
 
-    quota = reset_quota_if_needed(db, quota)
+    reset_quota_if_needed(db, quota)
 
-    if quota.quota_remaining <= 0:
-        raise HTTPException(status_code=429, detail="Quota exceeded")
+    # Reserve quota atomically before the (slow) AI call so concurrent
+    # requests can't all pass the check and overspend.
+    if not try_consume_quota(db, user_id):
+        raise HTTPException(status_code=429, detail="Daily quota exceeded")
 
-    challenge_data = generate_challenge_with_ai(request.difficulty)
+    try:
+        challenge_data = generate_challenge_with_ai(request.difficulty)
 
-    new_challenge = create_challenge(
-        db=db,
-        difficulty=request.difficulty,
-        created_by=user_id,
-        challenge_title=challenge_data["title"],
-        options=json.dumps(challenge_data["options"]),
-        correct_answer=challenge_data["correct_answer_id"],
-        explanation=challenge_data["explanation"]
-    )
-
-    quota.quota_remaining -= 1
-    db.commit()
+        new_challenge = create_challenge(
+            db=db,
+            difficulty=request.difficulty,
+            created_by=user_id,
+            challenge_title=challenge_data["title"],
+            options=json.dumps(challenge_data["options"]),
+            correct_answer=challenge_data["correct_answer_id"],
+            explanation=challenge_data["explanation"]
+        )
+    except Exception:
+        db.rollback()
+        refund_quota(db, user_id)
+        raise
 
     return {
         "id": new_challenge.id,
@@ -62,7 +67,7 @@ async def generate_challenge(request: ChallengeRequest, request_obj: Request, db
     }
 
 @router.get("/my-history")
-async def my_history(request: Request, db: Session = Depends(get_db)):
+def my_history(request: Request, db: Session = Depends(get_db)):
     user_details = authenticate_and_get_user_details(request)
     user_id = user_details.get('userid')
 
@@ -83,7 +88,7 @@ async def my_history(request: Request, db: Session = Depends(get_db)):
     }
 
 @router.get("/quota")
-async def get_quota(request: Request, db: Session = Depends(get_db)):
+def get_quota(request: Request, db: Session = Depends(get_db)):
     user_details = authenticate_and_get_user_details(request)
     user_id = user_details.get('userid')
 

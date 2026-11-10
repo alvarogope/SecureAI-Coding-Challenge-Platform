@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from . import models
@@ -22,6 +23,26 @@ def reset_quota_if_needed(db: Session, quota: models.ChallengeQuota):
         db.commit()
         db.refresh(quota)
     return quota
+
+def try_consume_quota(db: Session, user_id: str) -> bool:
+    """Atomically decrement the user's quota. Returns False if none was left."""
+    result = db.execute(
+        update(models.ChallengeQuota)
+        .where(models.ChallengeQuota.user_id == user_id,
+               models.ChallengeQuota.quota_remaining > 0)
+        .values(quota_remaining=models.ChallengeQuota.quota_remaining - 1)
+    )
+    db.commit()
+    return result.rowcount == 1
+
+def refund_quota(db: Session, user_id: str) -> None:
+    """Give back one unit of quota, e.g. when challenge generation fails."""
+    db.execute(
+        update(models.ChallengeQuota)
+        .where(models.ChallengeQuota.user_id == user_id)
+        .values(quota_remaining=models.ChallengeQuota.quota_remaining + 1)
+    )
+    db.commit()
 
 def create_challenge(
     db: Session,
